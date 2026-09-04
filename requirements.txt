@@ -1,13 +1,13 @@
-
-streamlit
-pandas
-numpy
-opencv-python
-scikit-image
-torch
-transformers
-scikit-learn
-joblib
-matplotlib
-openpyxl
-pillow
+--extra-index-url https://download.pytorch.org/whl/cpu 
+streamlit==1.55.0 
+pandas==2.3.3 
+numpy==2.2.6 
+scikit-learn==1.7.2 
+joblib==1.5.3 
+Pillow 
+transformers==5.4.0 
+torch==2.12.1 
+opencv-python-headless==4.13.0.92 
+scikit-image==0.25.2 
+openpyxl==3.1.5 
+matplotlib==3.10.8 
