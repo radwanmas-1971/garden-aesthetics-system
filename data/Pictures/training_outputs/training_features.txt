@@ -1,0 +1,5 @@
+grass_pct
+trees_pct
+flowers_pct
+ground_pct
+water_pct
