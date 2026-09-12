@@ -1,5 +1,6 @@
 # app.py
 import os
+import base64
 import streamlit as st
 import pandas as pd
 from io import BytesIO
@@ -132,6 +133,19 @@ def pick_file_dialog(title="Select file", filetypes=(("All files", "*.*"),)):
 def safe_load_image(path):
     try:
         return Image.open(path)
+    except Exception:
+        return None
+
+
+def _pil_to_data_uri(img):
+    """Encode a PIL image as a base64 data URI, for embedding inside custom HTML (avatar rings)."""
+    if img is None:
+        return None
+    try:
+        buf = BytesIO()
+        img.convert("RGB").save(buf, format="JPEG", quality=90)
+        b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+        return f"data:image/jpeg;base64,{b64}"
     except Exception:
         return None
 
@@ -645,28 +659,110 @@ if st.session_state.get("show_about", False):
     st.markdown(
         """
     <style>
-      .about-scope{direction:rtl; text-align:right; font-family:"Cairo","Tahoma","Arial",sans-serif;}
-      .about-title{font-size:32px; font-weight:900; text-align:center; margin:8px 0 2px;}
-      .about-sub{font-size:16.5px; font-weight:700; text-align:center; color:rgba(0,0,0,0.68); margin-bottom:14px; line-height:1.9;}
-      .divider{height:1px; background:rgba(0,0,0,0.12); margin:12px 0 16px;}
+      @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
 
-      .card{border:1px solid rgba(0,0,0,0.08); border-radius:18px; padding:16px 18px; background:#fff;
-            box-shadow:0 10px 24px rgba(0,0,0,0.06); margin-bottom:14px;}
-      .card h3{margin:0 0 10px; font-size:20px; font-weight:900; text-align:center;}
+      .about-scope{direction:rtl; text-align:right; font-family:"Cairo","Tahoma","Arial",sans-serif;}
+
+      /* ---------- Hero banner ---------- */
+      .hero{
+        background:linear-gradient(120deg,#0f5132 0%,#1b7a52 45%,#0e8f86 100%);
+        border-radius:24px; padding:26px 30px; margin-bottom:18px;
+        box-shadow:0 14px 34px rgba(15,81,50,0.28);
+        position:relative; overflow:hidden;
+      }
+      .hero::after{
+        content:"🌿"; position:absolute; font-size:120px; opacity:0.10;
+        left:-10px; top:-30px; transform:rotate(-12deg);
+      }
+      .hero-title{color:#fff; font-size:30px; font-weight:900; text-align:center; margin:2px 0 6px; letter-spacing:.2px;}
+      .hero-sub{color:rgba(255,255,255,0.92); font-size:16px; font-weight:700; text-align:center; margin-bottom:10px;}
+      .hero-tagline{
+        display:flex; justify-content:center;
+      }
+      .hero-tagline span{
+        background:rgba(255,255,255,0.16); color:#fff; font-size:13.5px; font-weight:700;
+        padding:6px 16px; border-radius:999px; border:1px solid rgba(255,255,255,0.32);
+      }
+      .logo-chip{
+        background:#fff; border-radius:18px; padding:10px; display:flex; align-items:center; justify-content:center;
+        box-shadow:0 8px 18px rgba(0,0,0,0.14); height:100%;
+      }
+
+      /* ---------- Cards ---------- */
+      .card{border:1px solid rgba(0,0,0,0.06); border-radius:20px; padding:20px 22px; background:#fff;
+            box-shadow:0 12px 28px rgba(20,40,30,0.07); margin-bottom:18px;}
+      .card h3{margin:0 0 14px; font-size:21px; font-weight:900; text-align:center;}
+      .card-goal{border-top:5px solid #0e8f86;}
+      .card-sup{border-top:5px solid #d7a02b;}
+      .card-dev{border-top:5px solid #1b7a52;}
+
+      .section-title{
+        display:flex; align-items:center; justify-content:center; gap:10px;
+        font-size:22px; font-weight:900; margin-bottom:16px; color:#12312a;
+      }
+      .section-title .ic{
+        width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+        font-size:19px; color:#fff; flex-shrink:0;
+      }
 
       .muted{color:rgba(0,0,0,0.72); line-height:2.0; font-size:16px;}
-      .note{background:rgba(0,118,255,0.06); border:1px solid rgba(0,118,255,0.14);
-            padding:12px 14px; border-radius:14px; margin-top:10px; font-size:14.8px; line-height:1.9;}
-      .accent{border-right:6px solid rgba(0,118,255,0.35);}
-      .row-title{font-weight:900; font-size:18px; margin-bottom:6px;}
-      .role{color:rgba(0,0,0,0.68); font-size:15.2px; line-height:1.9;}
-      .quote{background:rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.08); padding:12px 14px;
-             border-radius:14px; margin-top:10px; font-size:15.2px; line-height:1.95;}
+      .note{background:#eaf6ff; border:1px solid #bfe2ff;
+            padding:13px 16px; border-radius:14px; margin-top:12px; font-size:14.6px; line-height:1.9;
+            display:flex; gap:10px; align-items:flex-start;}
+      .note .ic{font-size:18px; flex-shrink:0;}
+
+      .goal-row{display:flex; align-items:flex-start; gap:12px; margin-bottom:10px; text-align:right;}
+      .goal-num{
+        width:32px; height:32px; border-radius:50%; background:#0e8f86; color:#fff; font-weight:900;
+        display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:15px;
+        box-shadow:0 4px 10px rgba(14,143,134,0.35);
+      }
+      .goal-text{font-size:16px; line-height:1.85; color:#1f2a26; padding-top:3px;}
+
+      .pill-row{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:14px 0 4px;}
+      .pill{
+        background:#eefaf6; color:#0f6e5e; border:1px solid #bfe9dc; font-weight:800; font-size:12.8px;
+        padding:6px 14px; border-radius:999px;
+      }
+
+      .sup-row{display:flex; align-items:center; gap:16px; padding:12px 6px; border-radius:14px;}
+      .sup-row:hover{background:rgba(215,160,43,0.05);}
+      .avatar-ring{
+        width:88px; height:88px; border-radius:50%; padding:3px; flex-shrink:0;
+        background:linear-gradient(135deg,#d7a02b,#f0c869);
+        display:flex; align-items:center; justify-content:center;
+      }
+      .avatar-ring.green{background:linear-gradient(135deg,#1b7a52,#4fd39a);}
+      .avatar-ring img{border-radius:50%; width:100%; height:100%; object-fit:cover; border:3px solid #fff;}
+      .avatar-fallback{
+        width:100%; height:100%; border-radius:50%; background:#fff; border:3px solid #fff;
+        display:flex; align-items:center; justify-content:center; font-size:30px; color:#c9a54a;
+      }
+      .row-title{font-weight:900; font-size:18px; margin-bottom:5px;}
+      .role{color:rgba(0,0,0,0.62); font-size:14.8px; line-height:1.7; margin-bottom:4px;}
+      .role-badge{
+        display:inline-block; font-size:12.6px; font-weight:800; padding:4px 12px; border-radius:999px;
+        background:#fff4e0; color:#a5710a; border:1px solid #f1d69a; margin-top:2px;
+      }
+      .role-badge.blue{background:#e7f3ff; color:#1560a8; border-color:#bcdcff;}
+      .quote{background:#faf7ef; border:1px dashed #e3cf9f; padding:14px 16px;
+             border-radius:14px; margin-top:14px; font-size:14.8px; line-height:1.95; color:#4a4030;}
+      .quote .qmark{color:#d7a02b; font-size:20px; font-weight:900; margin-left:6px;}
+
+      .dev-tags{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:12px;}
+      .dev-tag{
+        background:#eefaf3; color:#166a45; border:1px solid #bfe6cf; font-weight:700; font-size:12.6px;
+        padding:6px 13px; border-radius:999px;
+      }
+
+      .footer-note{
+        background:linear-gradient(90deg,#0e8f86,#1b7a52); color:#fff; border-radius:16px;
+        padding:14px 18px; text-align:center; font-size:15px; font-weight:800; margin-top:6px;
+        box-shadow:0 8px 20px rgba(14,143,134,0.25);
+      }
 
       .center-rtl{direction:rtl; text-align:center; unicode-bidi:bidi-override; font-family:"Cairo","Tahoma","Arial",sans-serif; line-height:1.9;}
-      .center-rtl h2{font-size:24px; font-weight:900; margin-bottom:12px;}
       .center-rtl p{font-size:16px;}
-      .center-rtl ol{list-style-position:inside; padding:0; margin:0 auto; display:inline-block; text-align:right;}
     </style>
     """,
         unsafe_allow_html=True,
@@ -683,44 +779,59 @@ if st.session_state.get("show_about", False):
 
     st.markdown('<div class="about-scope">', unsafe_allow_html=True)
 
-    # ---------- Header with logos ----------
-    L, C, R = st.columns([1.1, 2.8, 1.1])
+    # ---------- Hero header with logos ----------
+    st.markdown('<div class="hero">', unsafe_allow_html=True)
+    L, C, R = st.columns([1, 3.4, 1])
     with L:
+        st.markdown('<div class="logo-chip">', unsafe_allow_html=True)
         if uomosul_logo:
-            st.image(uomosul_logo, width=130)
+            st.image(uomosul_logo, width=90)
         else:
-            st.caption("ضع شعار الجامعة: assets/uomosul_logo.png")
+            st.caption("شعار الجامعة")
+        st.markdown('</div>', unsafe_allow_html=True)
     with C:
-        st.markdown('<div class="about-title">نظام تقييم جمال الحدائق بالذكاء الاصطناعي</div>', unsafe_allow_html=True)
-        st.markdown('<div class="about-sub">جامعة الموصل – كلية الزراعة والغابات</div>', unsafe_allow_html=True)
+        st.markdown('<div class="hero-title">🌿 نظام تقييم جمال الحدائق بالذكاء الاصطناعي</div>', unsafe_allow_html=True)
+        st.markdown('<div class="hero-sub">جامعة الموصل – كلية الزراعة والغابات</div>', unsafe_allow_html=True)
+        st.markdown('<div class="hero-tagline"><span>مشروع أطروحة دكتوراه — تعلّم عميق × استدلال معرفي</span></div>', unsafe_allow_html=True)
     with R:
+        st.markdown('<div class="logo-chip">', unsafe_allow_html=True)
         if college_logo:
-            st.image(college_logo, width=130)
+            st.image(college_logo, width=90)
         else:
-            st.caption("ضع شعار الكلية: assets/college_logo.png")
-
-    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+            st.caption("شعار الكلية")
+        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)  # end hero
 
     # ---------- Goal card ----------
     st.markdown(
         """
-    <div class="center-rtl card">
-      <h2>الجهة العلمية وهدف النظام</h2>
+    <div class="card card-goal">
+      <div class="section-title">
+        <div class="ic" style="background:#0e8f86;">🎯</div>
+        الجهة العلمية وهدف النظام
+      </div>
 
-      <p>يهدف هذا النظام إلى:</p>
+      <div class="goal-row">
+        <div class="goal-num">1</div>
+        <div class="goal-text">تحليل صور الحدائق لاستخراج نسب العناصر (عشب، أشجار، زهور، أرض، …) باستخدام نماذج التعلم العميق.</div>
+      </div>
+      <div class="goal-row">
+        <div class="goal-num">2</div>
+        <div class="goal-text">ربط السمات المستخرجة بتقييمات البشر للجمال لبناء نموذج تنبؤي داعم للبحث.</div>
+      </div>
 
-      <ol>
-        <li>تحليل صور الحدائق لاستخراج نسب العناصر (عشب، أشجار، زهور، أرض، …) باستخدام نماذج التعلم العميق.</li>
-        <li>ربط السمات المستخرجة بتقييمات البشر للجمال لبناء نموذج تنبؤي داعم للبحث.</li>
-      </ol>
-
-      <p style="margin-top:14px; font-weight:800;">
-        SegFormer – Feature Extraction – Quality Filtering – Dataset Builder – MLP Aesthetics
-      </p>
+      <div class="pill-row">
+        <span class="pill">SegFormer</span>
+        <span class="pill">Feature Extraction</span>
+        <span class="pill">Quality Filtering</span>
+        <span class="pill">Dataset Builder</span>
+        <span class="pill">MLP Aesthetics</span>
+      </div>
 
       <div class="note">
-        يتم حساب السماء والمباني والجدران لأغراض <b>التفسير والتحليل</b> فقط (Interpretability)،
-        ولا يتم إدخالها ضمن ميزات تدريب الجمال افتراضيًا.
+        <div class="ic">ℹ️</div>
+        <div>يتم حساب السماء والمباني والجدران لأغراض <b>التفسير والتحليل</b> فقط (Interpretability)،
+        ولا يتم إدخالها ضمن ميزات تدريب الجمال افتراضيًا.</div>
       </div>
     </div>
     """,
@@ -728,68 +839,79 @@ if st.session_state.get("show_about", False):
     )
 
     # ---------- Supervision card ----------
-    st.markdown('<div class="card accent">', unsafe_allow_html=True)
-    st.markdown('<h3>الإشراف العلمي</h3>', unsafe_allow_html=True)
-
-    r1, r2 = st.columns([3.2, 1.1])
-    with r1:
-        st.markdown(
-            """
-        <div class="row-title">أ. د. علي فاروق المعاضيدي</div>
-        <div class="role">عميد كلية الزراعة والغابات — جامعة الموصل <b>(المشرف الأول / الإشراف العام)</b></div>
-        """,
-            unsafe_allow_html=True,
-        )
-    with r2:
-        if supervisor1_img:
-            st.image(supervisor1_img, width=120)
-        else:
-            st.caption("ضع صورة المشرف: assets/supervisor1.jpg")
-
-    st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
-
-    r3, r4 = st.columns([3.2, 1.1])
-    with r3:
-        st.markdown(
-            """
-        <div class="row-title">أ. م. د. رضوان محمد عبدالله</div>
-        <div class="role"><b>المشرف الثاني</b> — الإشراف المباشر على الجوانب التحليلية والبرمجية وتطوير النظام</div>
-        """,
-            unsafe_allow_html=True,
-        )
-    with r4:
-        if profile_img:
-            st.image(profile_img, width=120)
-        else:
-            st.caption("ضع صورتك: assets/profile.jpg")
+    sup1_uri = _pil_to_data_uri(supervisor1_img)
+    sup1_avatar = f'<img src="{sup1_uri}">' if sup1_uri else '<div class="avatar-fallback">👤</div>'
+    prof_uri = _pil_to_data_uri(profile_img)
+    prof_avatar = f'<img src="{prof_uri}">' if prof_uri else '<div class="avatar-fallback">👤</div>'
 
     st.markdown(
-        """
-      <div class="quote">
-        تم تنفيذ العمل البحثي وتطوير هذا النظام تحت الإشراف العلمي العام للأستاذ الدكتور علي،
-        وبإشراف مباشر في الجوانب البرمجية والتحليلية من قبل الأستاذ المساعد الدكتور رضوان محمد عبدالله.
+        f"""
+    <div class="card card-sup">
+      <div class="section-title">
+        <div class="ic" style="background:#d7a02b;">🎓</div>
+        الإشراف العلمي
       </div>
+
+      <div class="sup-row">
+        <div class="avatar-ring">{sup1_avatar}</div>
+        <div>
+          <div class="row-title">أ. د. علي فاروق المعاضيدي</div>
+          <div class="role">عميد كلية الزراعة والغابات — جامعة الموصل</div>
+          <span class="role-badge">المشرف الأول · الإشراف العام</span>
+        </div>
+      </div>
+
+      <div style="height:6px"></div>
+
+      <div class="sup-row">
+        <div class="avatar-ring green">{prof_avatar}</div>
+        <div>
+          <div class="row-title">أ. م. د. رضوان محمد عبدالله</div>
+          <div class="role">الإشراف المباشر على الجوانب التحليلية والبرمجية وتطوير النظام</div>
+          <span class="role-badge blue">المشرف الثاني · الإشراف المباشر</span>
+        </div>
+      </div>
+
+      <div class="quote"><span class="qmark">“</span>تم تنفيذ العمل البحثي وتطوير هذا النظام تحت الإشراف العلمي العام للأستاذ الدكتور علي،
+        وبإشراف مباشر في الجوانب البرمجية والتحليلية من قبل الأستاذ المساعد الدكتور رضوان محمد عبدالله.<span class="qmark">”</span></div>
+    </div>
     """,
         unsafe_allow_html=True,
     )
 
-    st.markdown("</div>", unsafe_allow_html=True)  # end supervision card
-
     # ---------- Developer card ----------
+    dev_avatar = f'<img src="{prof_uri}">' if prof_uri else '<div class="avatar-fallback">👤</div>'
     st.markdown(
-        """
-    <div class="card accent center-rtl">
-      <h2 style="margin:0 0 10px 0;">مصمم ومطور النظام</h2>
-      <div class="muted">
-        <b>أ. م. د. رضوان محمد عبدالله</b><br>
-        تصميم الواجهة، بناء خط المعالجة، تطوير سكربتات استخراج السمات، تجهيز البيانات،
-        التدريب، وتوثيق المنهجية بما يتوافق مع متطلبات مشروع الدكتوراه.
+        f"""
+    <div class="card card-dev" style="text-align:center;">
+      <div class="section-title" style="justify-content:center;">
+        <div class="ic" style="background:#1b7a52;">🧑‍💻</div>
+        مصمم ومطور النظام
+      </div>
+
+      <div class="avatar-ring green" style="margin:0 auto 12px;">{dev_avatar}</div>
+      <div class="row-title" style="text-align:center;">أ. م. د. رضوان محمد عبدالله</div>
+      <div class="muted" style="text-align:center; font-size:15px;">
+        صمَّم وطوّر هذا النظام بالكامل بما يتوافق مع متطلبات مشروع الدكتوراه
+      </div>
+
+      <div class="dev-tags">
+        <span class="dev-tag">🖥️ تصميم الواجهة</span>
+        <span class="dev-tag">🧬 بناء خط المعالجة</span>
+        <span class="dev-tag">🌿 استخراج السمات</span>
+        <span class="dev-tag">🗂️ تجهيز البيانات</span>
+        <span class="dev-tag">🧠 التدريب</span>
+        <span class="dev-tag">📘 توثيق المنهجية</span>
       </div>
     </div>
     """,
         unsafe_allow_html=True,
     )
-    st.info("📌 مخطط المنهجية موجود في صفحة: 9) مخطط المنهجية")
+
+    st.markdown(
+        '<div class="footer-note">🗺️ مخطط المنهجية الكامل متاح ضمن صفحة: <b>10) مخطط المنهجية</b> من القائمة الجانبية</div>',
+        unsafe_allow_html=True,
+    )
 
     st.markdown("</div>", unsafe_allow_html=True)  # end about-scope
     st.stop()
