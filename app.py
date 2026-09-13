@@ -683,10 +683,13 @@ if st.session_state.get("show_about", False):
         background:rgba(255,255,255,0.16); color:#fff; font-size:13.5px; font-weight:700;
         padding:6px 16px; border-radius:999px; border:1px solid rgba(255,255,255,0.32);
       }
+      .hero-row{display:flex; align-items:center; justify-content:center; gap:22px; position:relative; z-index:1;}
+      .hero-center{flex:1; min-width:0;}
       .logo-chip{
-        background:#fff; border-radius:18px; padding:10px; display:flex; align-items:center; justify-content:center;
-        box-shadow:0 8px 18px rgba(0,0,0,0.14); height:100%;
+        background:#fff; border-radius:18px; padding:8px; display:flex; align-items:center; justify-content:center;
+        box-shadow:0 8px 18px rgba(0,0,0,0.14); width:74px; height:74px; flex-shrink:0;
       }
+      .logo-chip img{max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;}
 
       /* ---------- Cards ---------- */
       .card{border:1px solid rgba(0,0,0,0.06); border-radius:20px; padding:20px 22px; background:#fff;
@@ -780,27 +783,33 @@ if st.session_state.get("show_about", False):
     st.markdown('<div class="about-scope">', unsafe_allow_html=True)
 
     # ---------- Hero header with logos ----------
-    st.markdown('<div class="hero">', unsafe_allow_html=True)
-    L, C, R = st.columns([1, 3.4, 1])
-    with L:
-        st.markdown('<div class="logo-chip">', unsafe_allow_html=True)
-        if uomosul_logo:
-            st.image(uomosul_logo, width=90)
-        else:
-            st.caption("شعار الجامعة")
-        st.markdown('</div>', unsafe_allow_html=True)
-    with C:
-        st.markdown('<div class="hero-title">🌿 نظام تقييم جمال الحدائق بالذكاء الاصطناعي</div>', unsafe_allow_html=True)
-        st.markdown('<div class="hero-sub">جامعة الموصل – كلية الزراعة والغابات</div>', unsafe_allow_html=True)
-        st.markdown('<div class="hero-tagline"><span>مشروع أطروحة دكتوراه — تعلّم عميق × استدلال معرفي</span></div>', unsafe_allow_html=True)
-    with R:
-        st.markdown('<div class="logo-chip">', unsafe_allow_html=True)
-        if college_logo:
-            st.image(college_logo, width=90)
-        else:
-            st.caption("شعار الكلية")
-        st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)  # end hero
+    # Built as ONE self-contained HTML block (logos embedded as base64 <img> tags).
+    # NOTE: st.columns()/st.image() must NOT be used to fill an unsafe_allow_html
+    # div opened in a separate st.markdown call — Streamlit renders every
+    # st.markdown/st.columns call as its own DOM node, so the div never actually
+    # wraps them; the browser just auto-closes the empty tag, leaving the white
+    # hero-title text floating on the plain page background. Single block avoids that.
+    uom_uri = _pil_to_data_uri(uomosul_logo)
+    col_uri = _pil_to_data_uri(college_logo)
+    uom_chip = f'<img src="{uom_uri}">' if uom_uri else '<span style="font-size:26px;">🏛️</span>'
+    col_chip = f'<img src="{col_uri}">' if col_uri else '<span style="font-size:26px;">🏫</span>'
+
+    st.markdown(
+        f"""
+    <div class="hero">
+      <div class="hero-row">
+        <div class="logo-chip">{uom_chip}</div>
+        <div class="hero-center">
+          <div class="hero-title">🌿 نظام تقييم جمال الحدائق بالذكاء الاصطناعي</div>
+          <div class="hero-sub">جامعة الموصل – كلية الزراعة والغابات</div>
+          <div class="hero-tagline"><span>مشروع أطروحة دكتوراه — تعلّم عميق × استدلال معرفي</span></div>
+        </div>
+        <div class="logo-chip">{col_chip}</div>
+      </div>
+    </div>
+    """,
+        unsafe_allow_html=True,
+    )
 
     # ---------- Goal card ----------
     st.markdown(
