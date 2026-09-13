@@ -301,19 +301,21 @@ if "survey_xlsx" not in st.session_state:
 outputs_dir = os.path.join(st.session_state["image_folder"], "outputs")
 
 # ---------------- Header (مُوسّط) ----------------
-st.markdown(
-    """
-    <div style="text-align:center; margin-top:6px;">
-        <div style="font-size:36px; font-weight:900;">
-             🌿 نظام تقييم جمال الحدائق (اطروحة دكتوراه)
+# لا يظهر في صفحة "عن المشروع" (لها ترويسة خاصة بها - hero banner)
+if not st.session_state.get("show_about", False):
+    st.markdown(
+        """
+        <div style="text-align:center; margin-top:6px;">
+            <div style="font-size:36px; font-weight:900;">
+                 🌿 نظام تقييم جمال الحدائق (اطروحة دكتوراه)
+            </div>
+            <div style="font-size:15px; color:rgba(0,0,0,0.65); margin-top:6px;">
+                استخراج السمات ← دمج الاستبيان ← استبعاد الجودة ← تدريب النموذج ← معايرة الدرجة ← المراجعة البصرية
+            </div>
         </div>
-        <div style="font-size:15px; color:rgba(0,0,0,0.65); margin-top:6px;">
-            استخراج السمات ← دمج الاستبيان ← استبعاد الجودة ← تدريب النموذج ← معايرة الدرجة ← المراجعة البصرية
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+        """,
+        unsafe_allow_html=True,
+    )
 
 # ---------------- Sidebar Settings ----------------
 st.sidebar.header("⚙️ الإعدادات")
@@ -771,15 +773,6 @@ if st.session_state.get("show_about", False):
         unsafe_allow_html=True,
     )
 
-    # ---------- Back button ----------
-    barL, barR = st.columns([1, 5])
-    with barL:
-        if st.button("⬅️ العودة للنظام"):
-            st.session_state["show_about"] = False
-            st.rerun()
-    with barR:
-        st.markdown("")
-
     st.markdown('<div class="about-scope">', unsafe_allow_html=True)
 
     # ---------- Hero header with logos ----------
@@ -923,6 +916,15 @@ if st.session_state.get("show_about", False):
     )
 
     st.markdown("</div>", unsafe_allow_html=True)  # end about-scope
+
+    # ---------- Back button (أسفل الصفحة) ----------
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    backL, backC, backR = st.columns([2, 1, 2])
+    with backC:
+        if st.button("⬅️ العودة للنظام", use_container_width=True):
+            st.session_state["show_about"] = False
+            st.rerun()
+
     st.stop()
 
 # ============================================================
